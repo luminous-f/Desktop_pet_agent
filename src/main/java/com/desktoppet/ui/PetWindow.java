@@ -1,7 +1,7 @@
 package com.desktoppet.ui;
 
-import com.desktoppet.backend.ApiModels.ChatResponse;
-import com.desktoppet.backend.ApiModels.StartupResponse;
+import com.desktoppet.controller.dto.ApiModels.ChatResponse;
+import com.desktoppet.controller.dto.ApiModels.StartupResponse;
 import com.desktoppet.client.BackendApiClient;
 import com.desktoppet.files.FileOrganizer;
 import com.desktoppet.schedule.ScheduleItem;

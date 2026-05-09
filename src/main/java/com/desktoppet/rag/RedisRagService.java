@@ -4,6 +4,8 @@ import com.desktoppet.config.AppConfig;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisPooled;
@@ -11,28 +13,41 @@ import redis.clients.jedis.JedisClientConfig;
 import redis.clients.jedis.search.FTCreateParams;
 import redis.clients.jedis.search.IndexDataType;
 import redis.clients.jedis.search.Query;
+import redis.clients.jedis.search.Document;
 import redis.clients.jedis.search.SearchResult;
 import redis.clients.jedis.search.schemafields.TagField;
 import redis.clients.jedis.search.schemafields.TextField;
 import redis.clients.jedis.search.schemafields.VectorField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-public final class RedisRagService implements RagService {
+@Service
+public class RedisRagService implements RagService {
+    private static final Logger log = LoggerFactory.getLogger(RedisRagService.class);
+
     private static final String BASE_CHUNK_KEY_PREFIX = "desktop-pet:rag:chunk:";
     private static final String BASE_PARENT_KEY_PREFIX = "desktop-pet:rag:parent:";
     private static final List<String> DEFAULT_DOCUMENTS = List.of(
             "/assets/rag/Castorice/README.md",
-            "/assets/rag/Castorice/world.md"
+            "/assets/rag/Castorice/world.md",
+            "/assets/rag/Castorice/story.docx"
     );
 
     private final JedisPooled jedis;
@@ -91,23 +106,59 @@ public final class RedisRagService implements RagService {
                     .limit(0, config.ragTopK())
                     .dialect(2);
             SearchResult result = jedis.ftSearch(searchIndex, redisQuery);
-            return result.getDocuments().stream()
+            List<Document> relevantDocuments = result.getDocuments().stream()
+                    .filter(document -> isRelevant(document.getString("vector_score")))
+                    .toList();
+            for (int i = 0; i < relevantDocuments.size(); i++) {
+                Document document = relevantDocuments.get(i);
+                log.info(
+                        "RAG hit #{}: source={}, parent={}, score={}, text={}",
+                        i + 1,
+                        document.getString("source"),
+                        document.getString("parent_id"),
+                        document.getString("vector_score"),
+                        summarize(document.getString("text"), 160)
+                );
+            }
+            List<String> references = relevantDocuments.stream()
                     .map(document -> document.getString("source") + " / " + document.getString("parent_id")
                             + ":\n" + document.getString("text"))
                     .toList();
+            log.info("RAG retrieve completed: queryLength={}, hits={}", query.length(), references.size());
+            return references;
         } catch (Exception e) {
+            log.warn("RAG retrieve failed: {}", e.getMessage());
             return List.of();
         }
     }
 
     @Override
     public void upsertDocument(String id, String text) {
+        indexDocumentIfNeeded(id, text);
+    }
+
+    private boolean indexDocumentIfNeeded(String id, String text) {
         if (embeddingModel == null || text == null || text.isBlank()) {
-            return;
+            return false;
         }
         String parentId = sanitizeId(id);
-        jedis.hset(parentKeyPrefix + parentId, Map.of("id", parentId, "text", text));
         List<String> chunks = chunkText(text);
+        String parentKey = parentKeyPrefix + parentId;
+        String contentHash = contentHash(text);
+        String existingHash = jedis.hget(parentKey, "content_hash");
+        String existingChunkCount = jedis.hget(parentKey, "chunk_count");
+        if (contentHash.equals(existingHash) && chunksPresent(parentId, existingChunkCount)) {
+            log.info("RAG document unchanged and complete; skipped: source={}, chunks={}", id, existingChunkCount);
+            return false;
+        }
+        deleteExistingChunks(parentId, existingChunkCount);
+        jedis.hset(parentKey, Map.of(
+                "id", parentId,
+                "source", id,
+                "text", text,
+                "content_hash", contentHash,
+                "chunk_count", Integer.toString(chunks.size())
+        ));
         for (int i = 0; i < chunks.size(); i++) {
             String chunk = chunks.get(i);
             Embedding embedding = embeddingModel.embed(chunk).content();
@@ -118,6 +169,8 @@ public final class RedisRagService implements RagService {
             hash.put(bytes("embedding"), vectorBytes(embedding.vector()));
             jedis.hset(bytes(chunkKeyPrefix + parentId + ":" + i), hash);
         }
+        log.info("RAG document indexed: source={}, chunks={}", id, chunks.size());
+        return true;
     }
 
     private EmbeddingModel createEmbeddingModel(AppConfig config) {
@@ -177,39 +230,79 @@ public final class RedisRagService implements RagService {
         }
     }
 
-    private void indexPackagedDocuments() {
+    @Override
+    public RagIndexingResult reindexPackagedDocuments() {
+        List<String> messages = new ArrayList<>();
         if (embeddingModel == null) {
-            return;
+            return new RagIndexingResult(0, 0, List.of("RAG disabled: embedding API key or model is not configured."));
         }
+        int indexed = 0;
+        int skipped = 0;
         try {
             for (String resource : DEFAULT_DOCUMENTS) {
                 String text = readResource(resource);
-                if (!text.isBlank() && !jedis.exists(parentKeyPrefix + sanitizeId(resource))) {
-                    upsertDocument(resource, text);
+                if (text.isBlank()) {
+                    messages.add(resource + " is empty or unreadable; skipped.");
+                    skipped++;
+                    continue;
+                }
+                if (indexDocumentIfNeeded(resource, text)) {
+                    messages.add(resource + " indexed.");
+                    indexed++;
+                } else {
+                    messages.add(resource + " unchanged and complete; skipped.");
+                    skipped++;
                 }
             }
         } catch (Exception e) {
-            System.err.println("RAG packaged document indexing failed: " + e.getMessage());
+            messages.add("RAG packaged document indexing failed: " + e.getMessage());
+            log.warn(messages.get(messages.size() - 1));
         }
+        log.info("RAG packaged indexing finished: indexed={}, skipped={}", indexed, skipped);
+        return new RagIndexingResult(indexed, skipped, List.copyOf(messages));
+    }
+
+    private void indexPackagedDocuments() {
+        reindexPackagedDocuments();
     }
 
     private List<String> chunkText(String text) {
         int chunkChars = Math.max(300, config.ragChunkChars());
         int overlap = Math.max(0, Math.min(config.ragChunkOverlapChars(), chunkChars / 2));
         List<String> chunks = new ArrayList<>();
-        int start = 0;
-        while (start < text.length()) {
-            int end = Math.min(text.length(), start + chunkChars);
-            chunks.add(text.substring(start, end).trim());
-            if (end == text.length()) {
-                break;
+        String[] paragraphs = text.replace("\r\n", "\n").split("\\n\\s*\\n|\\n");
+        StringBuilder current = new StringBuilder();
+        for (String paragraph : paragraphs) {
+            String normalized = paragraph.trim();
+            if (normalized.isBlank()) {
+                continue;
             }
-            start = Math.max(end - overlap, start + 1);
+            if (normalized.length() > chunkChars) {
+                flushChunk(chunks, current);
+                addSlidingChunks(chunks, normalized, chunkChars, overlap);
+                continue;
+            }
+            if (!current.isEmpty() && current.length() + normalized.length() + 1 > chunkChars) {
+                String previous = current.toString();
+                flushChunk(chunks, current);
+                String tail = tail(previous, overlap);
+                if (!tail.isBlank()) {
+                    current.append(tail);
+                }
+            }
+            if (!current.isEmpty()) {
+                current.append('\n');
+            }
+            current.append(normalized);
         }
+        flushChunk(chunks, current);
         return chunks;
     }
 
     private String readResource(String resource) {
+        if (resource.endsWith(".docx")) {
+            return readDocxResource(resource);
+        }
         try (InputStream in = RedisRagService.class.getResourceAsStream(resource)) {
             if (in == null) {
                 return "";
@@ -217,6 +310,123 @@ public final class RedisRagService implements RagService {
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             return "";
+        }
+    }
+
+    private String readDocxResource(String resource) {
+        try (InputStream in = RedisRagService.class.getResourceAsStream(resource)) {
+            if (in == null) {
+                return "";
+            }
+            try (XWPFDocument document = new XWPFDocument(in)) {
+                return document.getParagraphs().stream()
+                        .map(XWPFParagraph::getText)
+                        .map(String::trim)
+                        .filter(text -> !text.isBlank())
+                        .collect(Collectors.joining("\n"));
+            }
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    private boolean isRelevant(String vectorScore) {
+        if (vectorScore == null || vectorScore.isBlank()) {
+            return false;
+        }
+        try {
+            return Double.parseDouble(vectorScore) <= config.ragMaxVectorDistance();
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private String summarize(String text, int maxChars) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        String normalized = text.replace('\n', ' ').replaceAll("\\s+", " ").trim();
+        if (normalized.length() <= maxChars) {
+            return normalized;
+        }
+        return normalized.substring(0, maxChars) + "...";
+    }
+
+    private void deleteExistingChunks(String parentId, String chunkCount) {
+        int count = parseInt(chunkCount, -1);
+        if (count >= 0) {
+            for (int i = 0; i < count; i++) {
+                jedis.del(chunkKeyPrefix + parentId + ":" + i);
+            }
+            return;
+        }
+        Set<String> keys = jedis.keys(chunkKeyPrefix + parentId + ":*");
+        if (!keys.isEmpty()) {
+            jedis.del(keys.toArray(String[]::new));
+        }
+    }
+
+    private boolean chunksPresent(String parentId, String chunkCount) {
+        int count = parseInt(chunkCount, -1);
+        if (count <= 0) {
+            return false;
+        }
+        for (int i = 0; i < count; i++) {
+            if (!jedis.exists(chunkKeyPrefix + parentId + ":" + i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void flushChunk(List<String> chunks, StringBuilder current) {
+        String chunk = current.toString().trim();
+        if (!chunk.isBlank()) {
+            chunks.add(chunk);
+        }
+        current.setLength(0);
+    }
+
+    private void addSlidingChunks(List<String> chunks, String text, int chunkChars, int overlap) {
+        int start = 0;
+        while (start < text.length()) {
+            int end = Math.min(text.length(), start + chunkChars);
+            String chunk = text.substring(start, end).trim();
+            if (!chunk.isBlank()) {
+                chunks.add(chunk);
+            }
+            if (end == text.length()) {
+                break;
+            }
+            start = Math.max(end - overlap, start + 1);
+        }
+    }
+
+    private String tail(String text, int maxChars) {
+        if (maxChars <= 0 || text.isBlank()) {
+            return "";
+        }
+        int start = Math.max(0, text.length() - maxChars);
+        return text.substring(start).trim();
+    }
+
+    private int parseInt(String value, int fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private String contentHash(String text) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(text.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is not available", e);
         }
     }
 

@@ -1,11 +1,14 @@
 package com.desktoppet.resources;
 
+import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public final class CharacterContextService {
+@Service
+public class CharacterContextService {
     private static final List<String> DEFAULT_CONTEXT_RESOURCES = List.of(
             "/assets/character/Castorice/persona.md",
             "/assets/character/Castorice/world.md",

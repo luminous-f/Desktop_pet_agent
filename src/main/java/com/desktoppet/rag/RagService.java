@@ -6,4 +6,6 @@ public interface RagService {
     List<String> retrieve(String query);
 
     void upsertDocument(String id, String text);
+
+    RagIndexingResult reindexPackagedDocuments();
 }

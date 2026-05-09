@@ -1,12 +1,13 @@
 package com.desktoppet.agent.skill;
 
 import com.desktoppet.files.FileOrganizer;
-import com.desktoppet.news.NewsService;
-import com.desktoppet.news.SearchService;
-import com.desktoppet.profile.UserProfileService;
+import com.desktoppet.service.NewsService;
+import com.desktoppet.service.SearchService;
+import com.desktoppet.service.ProfileService;
 import com.desktoppet.schedule.ScheduleItem;
-import com.desktoppet.schedule.ScheduleService;
-import com.desktoppet.weather.QWeatherService;
+import com.desktoppet.service.ScheduleService;
+import com.desktoppet.service.WeatherService;
+import com.desktoppet.service.FileService;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 
 import java.util.List;
@@ -14,30 +15,30 @@ import java.util.Map;
 import java.util.Arrays;
 
 public final class SkillRegistry {
-    private final QWeatherService weatherService;
+    private final WeatherService weatherService;
     private final ScheduleService scheduleService;
     private final NewsService newsService;
     private final SearchService searchService;
-    private final FileOrganizer fileOrganizer;
-    private final UserProfileService profileService;
+    private final FileService fileService;
+    private final ProfileService profileService;
     private final OpenAiChatModel model;
     private String pendingScheduleTitle;
     private String pendingFilePreviewId;
 
     public SkillRegistry(
-            QWeatherService weatherService,
+            WeatherService weatherService,
             ScheduleService scheduleService,
             NewsService newsService,
             SearchService searchService,
-            FileOrganizer fileOrganizer,
-            UserProfileService profileService,
+            FileService fileService,
+            ProfileService profileService,
             OpenAiChatModel model
     ) {
         this.weatherService = weatherService;
         this.scheduleService = scheduleService;
         this.newsService = newsService;
         this.searchService = searchService;
-        this.fileOrganizer = fileOrganizer;
+        this.fileService = fileService;
         this.profileService = profileService;
         this.model = model;
     }
@@ -139,9 +140,9 @@ public final class SkillRegistry {
             if (pendingFilePreviewId == null || pendingFilePreviewId.isBlank()) {
                 return "没有待确认的文件整理预览。请先告诉我要整理的范围、文件类型和要求。";
             }
-            FileOrganizer.ConfirmResult result = fileOrganizer.confirm(pendingFilePreviewId);
+            FileOrganizer.ConfirmResult result = fileService.confirm(pendingFilePreviewId);
             pendingFilePreviewId = null;
-            return fileOrganizer.summarizeConfirm(result);
+            return fileService.summarizeConfirm(result);
         }
         String sourceRoot = arguments.getOrDefault("sourceRoot", "").trim();
         if (sourceRoot.isBlank()) {
@@ -152,9 +153,9 @@ public final class SkillRegistry {
         if (instruction.isBlank()) {
             instruction = "按用户要求分类文献";
         }
-        FileOrganizer.PreviewResult preview = fileOrganizer.preview(new FileOrganizer.PreviewRequest(sourceRoot, extensions, instruction));
+        FileOrganizer.PreviewResult preview = fileService.preview(new FileOrganizer.PreviewRequest(sourceRoot, extensions, instruction));
         pendingFilePreviewId = preview.previewId();
-        return fileOrganizer.summarizePreview(preview);
+        return fileService.summarizePreview(preview);
     }
 
     private String allowedRoots(Map<String, String> arguments) {
@@ -166,8 +167,8 @@ public final class SkillRegistry {
                 .map(String::trim)
                 .filter(root -> !root.isEmpty())
                 .toList();
-        FileOrganizer.AllowedRootsResult result = fileOrganizer.replaceAllowedRoots(rootList);
-        return fileOrganizer.summarizeAllowedRoots(result);
+        FileOrganizer.AllowedRootsResult result = fileService.replaceAllowedRoots(rootList);
+        return fileService.summarizeAllowedRoots(result);
     }
 
     private String profile(Map<String, String> arguments) {

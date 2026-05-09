@@ -78,6 +78,10 @@ public final class AppConfig {
         return Integer.parseInt(value("RAG_TOP_K", "rag.topK", "5"));
     }
 
+    public double ragMaxVectorDistance() {
+        return Double.parseDouble(value("RAG_MAX_VECTOR_DISTANCE", "rag.maxVectorDistance", "0.70"));
+    }
+
     public String mysqlJdbcUrl() {
         String host = value("MYSQL_HOST", "mysql.host", "127.0.0.1");
         String port = value("MYSQL_PORT", "mysql.port", "3306");

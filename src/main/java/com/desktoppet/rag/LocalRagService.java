@@ -40,6 +40,11 @@ public final class LocalRagService implements RagService {
         throw new UnsupportedOperationException("Local RAG reads packaged resources only.");
     }
 
+    @Override
+    public RagIndexingResult reindexPackagedDocuments() {
+        return new RagIndexingResult(0, chunks.size(), List.of("Local RAG reads packaged resources only."));
+    }
+
     private List<DocumentChunk> loadChunks() {
         List<DocumentChunk> loaded = new ArrayList<>();
         for (String resource : DEFAULT_DOCUMENTS) {

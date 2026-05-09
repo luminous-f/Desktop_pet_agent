@@ -1,23 +1,23 @@
 package com.desktoppet.resources;
 
-import com.desktoppet.storage.Database;
-import com.desktoppet.storage.entity.ResourcePackRecord;
-import com.desktoppet.storage.mapper.ResourcePackMapper;
-import org.apache.ibatis.session.SqlSession;
+import com.desktoppet.entity.ResourcePackRecord;
+import com.desktoppet.dao.ResourcePackMapper;
+import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
 import java.util.List;
 
-public final class ResourcePackService {
-    private final Database database;
+@Service
+public class ResourcePackService {
+    private final ResourcePackMapper resourcePackMapper;
 
-    public ResourcePackService(Database database) {
-        this.database = database;
+    public ResourcePackService(ResourcePackMapper resourcePackMapper) {
+        this.resourcePackMapper = resourcePackMapper;
     }
 
     public List<ResourcePack> enabledPacks() {
-        try (SqlSession session = database.openSession()) {
-            return session.getMapper(ResourcePackMapper.class).enabledPacks().stream()
+        try {
+            return resourcePackMapper.enabledPacks().stream()
                     .map(this::toPack)
                     .toList();
         } catch (Exception ignored) {
@@ -32,9 +32,7 @@ public final class ResourcePackService {
         record.setPersonaPath(pack.personaPath() == null ? null : pack.personaPath().toString());
         record.setWorldPath(pack.worldPath() == null ? null : pack.worldPath().toString());
         record.setEnabled(pack.enabled());
-        try (SqlSession session = database.openSession()) {
-            session.getMapper(ResourcePackMapper.class).insert(record);
-        }
+        resourcePackMapper.insert(record);
     }
 
     private ResourcePack toPack(ResourcePackRecord record) {
