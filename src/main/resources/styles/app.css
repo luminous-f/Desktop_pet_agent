@@ -7,6 +7,19 @@
     -fx-background-color: transparent;
 }
 
+.main-layout {
+    -fx-background-color: transparent;
+    -fx-alignment: center-left;
+}
+
+.pet-column {
+    -fx-background-color: transparent;
+}
+
+.panels-column {
+    -fx-background-color: transparent;
+}
+
 .character-pane {
     -fx-min-width: 240px;
     -fx-min-height: 300px;
@@ -29,38 +42,46 @@
 
 .chat-panel {
     -fx-background-image: url("../assets/UI/chat-panel.png");
-    -fx-min-width: 430px;
-    -fx-pref-width: 430px;
-    -fx-min-height: 332px;
-    -fx-pref-height: 332px;
-    -fx-padding: 34 42 34 42;
+    -fx-min-width: 470px;
+    -fx-pref-width: 470px;
+    -fx-max-width: 470px;
+    -fx-min-height: 343px;
+    -fx-pref-height: 343px;
+    -fx-max-height: 343px;
+    -fx-padding: 34 42 30 42;
 }
 
 .schedule-panel {
     -fx-background-image: url("../assets/UI/日程.png");
-    -fx-min-width: 314px;
-    -fx-pref-width: 314px;
-    -fx-min-height: 236px;
-    -fx-pref-height: 236px;
-    -fx-padding: 30 34 28 34;
+    -fx-min-width: 403px;
+    -fx-pref-width: 403px;
+    -fx-max-width: 403px;
+    -fx-min-height: 303px;
+    -fx-pref-height: 303px;
+    -fx-max-height: 303px;
+    -fx-padding: 38 44 36 44;
 }
 
 .news-panel {
     -fx-background-image: url("../assets/UI/新闻.png");
-    -fx-min-width: 395px;
-    -fx-pref-width: 395px;
-    -fx-min-height: 198px;
-    -fx-pref-height: 198px;
-    -fx-padding: 26 36 22 36;
+    -fx-min-width: 527px;
+    -fx-pref-width: 527px;
+    -fx-max-width: 527px;
+    -fx-min-height: 265px;
+    -fx-pref-height: 265px;
+    -fx-max-height: 265px;
+    -fx-padding: 34 48 30 48;
 }
 
 .profile-panel {
     -fx-background-image: url("../assets/UI/用户画像.png");
-    -fx-min-width: 331px;
-    -fx-pref-width: 331px;
-    -fx-min-height: 220px;
-    -fx-pref-height: 220px;
-    -fx-padding: 28 34 22 34;
+    -fx-min-width: 426px;
+    -fx-pref-width: 426px;
+    -fx-max-width: 426px;
+    -fx-min-height: 283px;
+    -fx-pref-height: 283px;
+    -fx-max-height: 283px;
+    -fx-padding: 36 44 28 44;
 }
 
 .panel-title {
@@ -71,6 +92,11 @@
 .captioned-button {
     -fx-background-color: transparent;
     -fx-alignment: center;
+    -fx-spacing: 2;
+}
+
+.send-button-box {
+    -fx-spacing: 0;
 }
 
 .button-caption {
@@ -80,12 +106,12 @@
 }
 
 .art-button {
-    -fx-min-width: 48px;
-    -fx-pref-width: 48px;
-    -fx-max-width: 48px;
-    -fx-min-height: 48px;
-    -fx-pref-height: 48px;
-    -fx-max-height: 48px;
+    -fx-min-width: 54px;
+    -fx-pref-width: 54px;
+    -fx-max-width: 54px;
+    -fx-min-height: 54px;
+    -fx-pref-height: 54px;
+    -fx-max-height: 54px;
     -fx-background-color: transparent;
     -fx-background-image: url("../assets/UI/button-normal.png");
     -fx-background-size: 100% 100%;
@@ -106,23 +132,34 @@
 }
 
 .tool-button {
-    -fx-min-width: 54px;
-    -fx-pref-width: 54px;
-    -fx-max-width: 54px;
-    -fx-min-height: 54px;
-    -fx-pref-height: 54px;
-    -fx-max-height: 54px;
+    -fx-min-width: 64px;
+    -fx-pref-width: 64px;
+    -fx-max-width: 64px;
+    -fx-min-height: 64px;
+    -fx-pref-height: 64px;
+    -fx-max-height: 64px;
+}
+
+.close-art-button {
+    -fx-min-width: 32px;
+    -fx-pref-width: 32px;
+    -fx-max-width: 32px;
+    -fx-min-height: 32px;
+    -fx-pref-height: 32px;
+    -fx-max-height: 32px;
+    -fx-text-fill: #30232a;
+    -fx-font-weight: bold;
 }
 
 .chat-log {
-    -fx-pref-height: 220px;
+    -fx-pref-height: 218px;
     -fx-wrap-text: true;
     -fx-background-color: transparent;
     -fx-border-color: transparent;
 }
 
 .chat-log .content {
-    -fx-background-color: rgba(255, 255, 255, 0.20);
+    -fx-background-color: rgba(255, 255, 255, 0.32);
 }
 
 .chat-input,
@@ -138,7 +175,7 @@
 
 .chat-input .content,
 .ui-input .content {
-    -fx-background-color: transparent;
+    -fx-background-color: rgba(255, 255, 255, 0.18);
 }
 
 .transparent-text {
@@ -148,6 +185,11 @@
 }
 
 .transparent-text .content {
+    -fx-background-color: rgba(255, 255, 255, 0.18);
+}
+
+.text-area .scroll-pane,
+.text-area .scroll-pane .viewport {
     -fx-background-color: transparent;
 }
 

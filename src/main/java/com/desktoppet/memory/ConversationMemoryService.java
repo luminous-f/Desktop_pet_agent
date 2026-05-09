@@ -96,7 +96,7 @@ public final class ConversationMemoryService {
         if (messages.isEmpty()) {
             return;
         }
-        saveSummary(sessionId, messages, model, "shutdown");
+        saveSummary(sessionId, messages, null, "shutdown");
         shortTermMemory.clear();
     }
 
@@ -137,7 +137,11 @@ public final class ConversationMemoryService {
                 会话：
                 %s
                 """.formatted(text);
-        return model.chat(prompt);
+        try {
+            return model.chat(prompt);
+        } catch (RuntimeException e) {
+            return "会话摘要（" + reason + "，模型摘要失败，已本地降级）：\n" + truncate(text, 1200);
+        }
     }
 
     private void extractStableFacts(String text) {

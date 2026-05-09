@@ -18,7 +18,7 @@ public final class DesktopPetClientApplication extends Application {
         boolean transparentWindow = Boolean.parseBoolean(System.getenv().getOrDefault("DESKTOP_PET_TRANSPARENT", "true"));
         boolean alwaysOnTop = Boolean.parseBoolean(System.getenv().getOrDefault("DESKTOP_PET_ALWAYS_ON_TOP", "false"));
 
-        Scene scene = new Scene(petWindow.view(), 860, 560);
+        Scene scene = new Scene(petWindow.view(), 980, 640);
         scene.setFill(transparentWindow ? Color.TRANSPARENT : Color.WHITE);
         scene.getStylesheets().add(DesktopPetClientApplication.class.getResource("/styles/app.css").toExternalForm());
 

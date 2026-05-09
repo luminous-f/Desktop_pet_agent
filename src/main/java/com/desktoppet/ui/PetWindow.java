@@ -18,7 +18,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
@@ -40,7 +39,7 @@ public final class PetWindow {
     private final BackendApiClient apiClient;
     private final Random random = new Random();
 
-    private final BorderPane root = new BorderPane();
+    private final StackPane root = new StackPane();
     private final ImageView petSprite = new ImageView();
     private final Image defaultSprite = loadSprite("默认.png", "speaking.png");
     private final Image happySprite = loadSprite("happy.png");
@@ -92,8 +91,9 @@ public final class PetWindow {
         root.getStyleClass().add("pet-root");
         root.setPadding(new Insets(10));
         root.setStyle("-fx-font-family: '" + UI_FONT + "';");
-        root.setCenter(buildMain());
-        root.setRight(buildSidePanels());
+        Button close = buildCloseButton();
+        root.getChildren().addAll(buildMain(), close);
+        StackPane.setAlignment(close, Pos.TOP_RIGHT);
     }
 
     private HBox buildMain() {
@@ -129,7 +129,7 @@ public final class PetWindow {
         send.setFont(Font.font(UI_FONT, 13));
         send.getStyleClass().add("art-button");
         send.setOnAction(event -> sendCurrentMessage());
-        HBox inputRow = new HBox(8, chatInput, buttonWithCaption(send, "发送"));
+        HBox inputRow = new HBox(8, chatInput, buttonWithCaption(send, "发送", "send-button-box"));
         inputRow.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(chatInput, Priority.ALWAYS);
 
@@ -161,13 +161,27 @@ public final class PetWindow {
         );
         tools.setAlignment(Pos.CENTER);
 
-        VBox interaction = new VBox(8, chatPanel, tools);
-        interaction.setAlignment(Pos.CENTER);
-        HBox.setHgrow(interaction, Priority.ALWAYS);
+        VBox petColumn = new VBox(4, characterPane, tools);
+        petColumn.getStyleClass().add("pet-column");
+        petColumn.setAlignment(Pos.CENTER);
 
-        HBox main = new HBox(10, characterPane, interaction);
+        VBox panels = new VBox(8, chatPanel, buildSidePanels());
+        panels.getStyleClass().add("panels-column");
+        panels.setAlignment(Pos.TOP_LEFT);
+        HBox.setHgrow(panels, Priority.ALWAYS);
+
+        HBox main = new HBox(4, petColumn, panels);
+        main.getStyleClass().add("main-layout");
         main.setAlignment(Pos.CENTER_LEFT);
         return main;
+    }
+
+    private Button buildCloseButton() {
+        Button close = new Button("x");
+        close.setFont(Font.font("DejaVu Sans", 13));
+        close.getStyleClass().addAll("art-button", "close-art-button");
+        close.setOnAction(event -> Platform.exit());
+        return close;
     }
 
     private VBox buildSidePanels() {
@@ -497,12 +511,19 @@ public final class PetWindow {
     }
 
     private VBox buttonWithCaption(Button button, String text) {
+        return buttonWithCaption(button, text, null);
+    }
+
+    private VBox buttonWithCaption(Button button, String text, String extraStyleClass) {
         button.setText("");
         Label caption = new Label(text);
         caption.getStyleClass().add("button-caption");
         caption.setFont(Font.font(UI_FONT, 12));
         VBox box = new VBox(2, button, caption);
         box.getStyleClass().add("captioned-button");
+        if (extraStyleClass != null) {
+            box.getStyleClass().add(extraStyleClass);
+        }
         box.setAlignment(Pos.CENTER);
         return box;
     }
