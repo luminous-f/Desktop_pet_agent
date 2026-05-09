@@ -18,6 +18,7 @@
 
 .panels-column {
     -fx-background-color: transparent;
+    -fx-translate-x: -30px;
 }
 
 .character-pane {
@@ -52,57 +53,62 @@
 }
 
 .schedule-panel {
-    -fx-background-image: url("../assets/UI/日程.png");
-    -fx-min-width: 403px;
-    -fx-pref-width: 403px;
-    -fx-max-width: 403px;
-    -fx-min-height: 303px;
-    -fx-pref-height: 303px;
-    -fx-max-height: 303px;
-    -fx-padding: 38 44 36 44;
+    -fx-background-image: url("../assets/UI/日程v2.png");
+    -fx-min-width: 320px;
+    -fx-pref-width: 320px;
+    -fx-max-width: 320px;
+    -fx-min-height: 109px;
+    -fx-pref-height: 109px;
+    -fx-max-height: 109px;
+    -fx-padding: 10 16 8 16;
+    -fx-spacing: 2;
 }
 
 .news-panel {
-    -fx-background-image: url("../assets/UI/新闻.png");
-    -fx-min-width: 527px;
-    -fx-pref-width: 527px;
-    -fx-max-width: 527px;
-    -fx-min-height: 265px;
-    -fx-pref-height: 265px;
-    -fx-max-height: 265px;
-    -fx-padding: 34 48 30 48;
+    -fx-background-image: url("../assets/UI/新闻v2.png");
+    -fx-min-width: 320px;
+    -fx-pref-width: 320px;
+    -fx-max-width: 320px;
+    -fx-min-height: 109px;
+    -fx-pref-height: 109px;
+    -fx-max-height: 109px;
+    -fx-padding: 10 16 8 16;
+    -fx-spacing: 2;
 }
 
 .profile-panel {
-    -fx-background-image: url("../assets/UI/用户画像.png");
-    -fx-min-width: 426px;
-    -fx-pref-width: 426px;
-    -fx-max-width: 426px;
-    -fx-min-height: 283px;
-    -fx-pref-height: 283px;
-    -fx-max-height: 283px;
-    -fx-padding: 36 44 28 44;
+    -fx-background-image: url("../assets/UI/用户画像v2.png");
+    -fx-min-width: 320px;
+    -fx-pref-width: 320px;
+    -fx-max-width: 320px;
+    -fx-min-height: 120px;
+    -fx-pref-height: 120px;
+    -fx-max-height: 120px;
+    -fx-padding: 10 16 8 16;
+    -fx-spacing: 2;
 }
 
 .panel-title {
     -fx-text-fill: #30232a;
     -fx-font-weight: bold;
+    -fx-font-size: 12px;
 }
 
 .captioned-button {
     -fx-background-color: transparent;
     -fx-alignment: center;
-    -fx-spacing: 2;
+    -fx-spacing: -6;
 }
 
 .send-button-box {
-    -fx-spacing: 0;
+    -fx-spacing: -8;
 }
 
 .button-caption {
     -fx-background-color: transparent;
     -fx-text-fill: #30232a;
     -fx-font-weight: bold;
+    -fx-font-size: 12px;
 }
 
 .art-button {
@@ -140,6 +146,15 @@
     -fx-max-height: 64px;
 }
 
+.panel-action-button {
+    -fx-min-width: 34px;
+    -fx-pref-width: 34px;
+    -fx-max-width: 34px;
+    -fx-min-height: 34px;
+    -fx-pref-height: 34px;
+    -fx-max-height: 34px;
+}
+
 .close-art-button {
     -fx-min-width: 32px;
     -fx-pref-width: 32px;
@@ -158,6 +173,22 @@
     -fx-border-color: transparent;
 }
 
+.schedule-list-scroll {
+    -fx-pref-height: 24px;
+    -fx-max-height: 24px;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.schedule-list-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.schedule-list-scroll .content {
+    -fx-background-color: transparent;
+}
+
 .chat-log .content {
     -fx-background-color: rgba(255, 255, 255, 0.32);
 }
@@ -173,6 +204,13 @@
     -fx-padding: 6 12 6 12;
 }
 
+.ui-input {
+    -fx-min-height: 28px;
+    -fx-pref-height: 28px;
+    -fx-max-height: 28px;
+    -fx-padding: 3 10 3 10;
+}
+
 .chat-input .content,
 .ui-input .content {
     -fx-background-color: rgba(255, 255, 255, 0.18);
@@ -181,7 +219,9 @@
 .transparent-text {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
-    -fx-padding: 4;
+    -fx-padding: 2;
+    -fx-pref-height: 32px;
+    -fx-max-height: 42px;
 }
 
 .transparent-text .content {

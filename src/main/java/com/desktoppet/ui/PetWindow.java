@@ -14,6 +14,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -152,7 +153,7 @@ public final class PetWindow {
         organize.getStyleClass().addAll("tool-button", "art-button");
         organize.setOnAction(event -> filePanelVisible());
         HBox tools = new HBox(
-                10,
+                4,
                 buttonWithCaption(chatToggle, "对话"),
                 buttonWithCaption(scheduleToggle, "日程"),
                 buttonWithCaption(newsToggle, "新闻"),
@@ -161,11 +162,11 @@ public final class PetWindow {
         );
         tools.setAlignment(Pos.CENTER);
 
-        VBox petColumn = new VBox(4, characterPane, tools);
+        VBox petColumn = new VBox(0, characterPane, tools);
         petColumn.getStyleClass().add("pet-column");
         petColumn.setAlignment(Pos.CENTER);
 
-        VBox panels = new VBox(8, chatPanel, buildSidePanels());
+        VBox panels = new VBox(4, chatPanel, buildSidePanels());
         panels.getStyleClass().add("panels-column");
         panels.setAlignment(Pos.TOP_LEFT);
         HBox.setHgrow(panels, Priority.ALWAYS);
@@ -197,7 +198,7 @@ public final class PetWindow {
         buildSchedulePanel();
         buildNewsPanel();
         buildProfilePanel();
-        return new VBox(8, schedulePanel, newsPanel, profilePanel);
+        return new VBox(4, schedulePanel, newsPanel, profilePanel);
     }
 
     private Button toolButton(Parent panel) {
@@ -217,13 +218,18 @@ public final class PetWindow {
         input.setPromptText("添加事项");
         Button add = new Button("添加");
         add.setFont(Font.font(UI_FONT, 13));
-        add.getStyleClass().add("art-button");
+        add.getStyleClass().addAll("art-button", "panel-action-button");
         add.setOnAction(event -> addSchedule(input));
         input.setOnAction(event -> addSchedule(input));
         HBox row = new HBox(8, input, buttonWithCaption(add, "添加"));
         row.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(input, Priority.ALWAYS);
-        schedulePanel.getChildren().addAll(title, row, scheduleList);
+        ScrollPane scheduleScroll = new ScrollPane(scheduleList);
+        scheduleScroll.getStyleClass().add("schedule-list-scroll");
+        scheduleScroll.setFitToWidth(true);
+        scheduleScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scheduleScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        schedulePanel.getChildren().addAll(title, row, scheduleScroll);
         refreshScheduleFromBackend();
     }
 
@@ -262,7 +268,7 @@ public final class PetWindow {
         newsText.setPrefRowCount(8);
         Button refresh = new Button("刷新");
         refresh.setFont(Font.font(UI_FONT, 13));
-        refresh.getStyleClass().add("art-button");
+        refresh.getStyleClass().addAll("art-button", "panel-action-button");
         refresh.setOnAction(event -> {
             newsText.setText("查询中...");
             runAsync(() -> {
@@ -283,7 +289,7 @@ public final class PetWindow {
         profileEditor.setPrefHeight(120);
         Button save = new Button("保存画像");
         save.setFont(Font.font(UI_FONT, 13));
-        save.getStyleClass().add("art-button");
+        save.getStyleClass().addAll("art-button", "panel-action-button");
         save.setOnAction(event -> {
             String profileText = profileEditor.getText();
             runAsync(() -> {
