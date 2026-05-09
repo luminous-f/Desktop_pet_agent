@@ -3,12 +3,12 @@
 ## 功能
 桌面宠物智能体主要提供智能聊天、文件整理、日程管理、天气新闻查询、个人资料记忆等功能。它通过自然语言调用后端技能，如按指令分类PDF并生成目录，并具备短期会话记忆、MySQL长期记忆以及基于Redis向量库的RAG检索能力。
 ## 技术栈
-语言/框架：Java 17, JavaFX, Maven
-AI/LLM：LangChain4j, DeepSeek（兼容 OpenAI 接口）
-数据库：MySQL（对话、记忆、日程、资料）, Redis Stack + RediSearch（向量 RAG）
-ORM：MyBatis
-外部服务：和风天气 API, 可选搜索 API（Tavily 兼容）
-嵌入模型：DashScope Qwen（qwen3-vl-embedding）
+语言/框架：Java 17, JavaFX, Maven /n
+AI/LLM：LangChain4j, DeepSeek（兼容 OpenAI 接口） /n
+数据库：MySQL（对话、记忆、日程、资料）, Redis Stack + RediSearch（向量 RAG） /n
+ORM：MyBatis /n
+外部服务：和风天气 API, 可选搜索 API（Tavily 兼容） /n
+嵌入模型：DashScope Qwen（qwen3-vl-embedding） /n
 ## 不足与优化方向
 1.整个项目没做测试；
 2.rag那里没做好，原本用的完整翁法洛斯剧情存入了向量数据库，后来发现这种对话式的混乱文档，llm是不能处理的，而且无法从中找到命中问题的chunk，我还做了rag优化，尝试按结构化语义去分chunk，加header，效果更差了，用了parent-child索引，并没有用，rag无法命中的时候llm依然会瞎编。感觉是因为语义太零碎了，不符合根据余弦距离找相近的原理，所以最后也没尝试多路召回、rerank之类的，打算先把文档整理一下；
