@@ -18,7 +18,8 @@
 
 .panels-column {
     -fx-background-color: transparent;
-    -fx-translate-x: -30px;
+    -fx-translate-x: -60px;
+    -fx-translate-y: 60px;
 }
 
 .character-pane {
@@ -97,11 +98,11 @@
 .captioned-button {
     -fx-background-color: transparent;
     -fx-alignment: center;
-    -fx-spacing: -6;
+    -fx-spacing: 0;
 }
 
 .send-button-box {
-    -fx-spacing: -8;
+    -fx-spacing: 0;
 }
 
 .button-caption {
@@ -112,14 +113,14 @@
 }
 
 .art-button {
-    -fx-min-width: 54px;
-    -fx-pref-width: 54px;
-    -fx-max-width: 54px;
-    -fx-min-height: 54px;
-    -fx-pref-height: 54px;
-    -fx-max-height: 54px;
+    -fx-min-width: 30px;
+    -fx-pref-width: 30px;
+    -fx-max-width: 30px;
+    -fx-min-height: 30px;
+    -fx-pref-height: 30px;
+    -fx-max-height: 30px;
     -fx-background-color: transparent;
-    -fx-background-image: url("../assets/UI/button-normal.png");
+    -fx-background-image: url("../assets/UI/button-normal-v2.png");
     -fx-background-size: 100% 100%;
     -fx-background-repeat: no-repeat;
     -fx-background-position: center;
@@ -129,45 +130,46 @@
 }
 
 .art-button:hover {
-    -fx-background-image: url("../assets/UI/button-hover.png");
+    -fx-background-image: url("../assets/UI/button-hover-v2.png");
 }
 
 .art-button:pressed {
-    -fx-background-image: url("../assets/UI/button-pressed.png");
+    -fx-background-image: url("../assets/UI/button-pressed-v2.png");
     -fx-translate-y: 1px;
 }
 
 .tool-button {
-    -fx-min-width: 64px;
-    -fx-pref-width: 64px;
-    -fx-max-width: 64px;
-    -fx-min-height: 64px;
-    -fx-pref-height: 64px;
-    -fx-max-height: 64px;
+    -fx-min-width: 30px;
+    -fx-pref-width: 30px;
+    -fx-max-width: 30px;
+    -fx-min-height: 30px;
+    -fx-pref-height: 30px;
+    -fx-max-height: 30px;
 }
 
 .panel-action-button {
-    -fx-min-width: 34px;
-    -fx-pref-width: 34px;
-    -fx-max-width: 34px;
-    -fx-min-height: 34px;
-    -fx-pref-height: 34px;
-    -fx-max-height: 34px;
+    -fx-min-width: 30px;
+    -fx-pref-width: 30px;
+    -fx-max-width: 30px;
+    -fx-min-height: 30px;
+    -fx-pref-height: 30px;
+    -fx-max-height: 30px;
 }
 
 .close-art-button {
-    -fx-min-width: 32px;
-    -fx-pref-width: 32px;
-    -fx-max-width: 32px;
-    -fx-min-height: 32px;
-    -fx-pref-height: 32px;
-    -fx-max-height: 32px;
+    -fx-min-width: 25px;
+    -fx-pref-width: 25px;
+    -fx-max-width: 25px;
+    -fx-min-height: 25px;
+    -fx-pref-height: 25px;
+    -fx-max-height: 25px;
     -fx-text-fill: #30232a;
     -fx-font-weight: bold;
 }
 
 .chat-log {
     -fx-pref-height: 218px;
+    -fx-max-width: 381px;
     -fx-wrap-text: true;
     -fx-background-color: transparent;
     -fx-border-color: transparent;
@@ -190,7 +192,7 @@
 }
 
 .chat-log .content {
-    -fx-background-color: rgba(255, 255, 255, 0.32);
+    -fx-background-color: rgba(255, 255, 255, 0.47);
 }
 
 .chat-input,
@@ -204,6 +206,10 @@
     -fx-padding: 6 12 6 12;
 }
 
+.chat-input {
+    -fx-max-width: 300px;
+}
+
 .ui-input {
     -fx-min-height: 28px;
     -fx-pref-height: 28px;
@@ -213,7 +219,7 @@
 
 .chat-input .content,
 .ui-input .content {
-    -fx-background-color: rgba(255, 255, 255, 0.18);
+    -fx-background-color: rgba(255, 255, 255, 0.33);
 }
 
 .transparent-text {

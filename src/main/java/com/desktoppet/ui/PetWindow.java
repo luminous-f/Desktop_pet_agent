@@ -95,6 +95,7 @@ public final class PetWindow {
         Button close = buildCloseButton();
         root.getChildren().addAll(buildMain(), close);
         StackPane.setAlignment(close, Pos.TOP_RIGHT);
+        StackPane.setMargin(close, new Insets(0, 60, 0, 0));
     }
 
     private HBox buildMain() {
@@ -166,7 +167,7 @@ public final class PetWindow {
         petColumn.getStyleClass().add("pet-column");
         petColumn.setAlignment(Pos.CENTER);
 
-        VBox panels = new VBox(4, chatPanel, buildSidePanels());
+        HBox panels = new HBox(4, chatPanel, buildSidePanels());
         panels.getStyleClass().add("panels-column");
         panels.setAlignment(Pos.TOP_LEFT);
         HBox.setHgrow(panels, Priority.ALWAYS);
@@ -174,6 +175,7 @@ public final class PetWindow {
         HBox main = new HBox(4, petColumn, panels);
         main.getStyleClass().add("main-layout");
         main.setAlignment(Pos.CENTER_LEFT);
+        tools.toFront();
         return main;
     }
 
@@ -525,6 +527,10 @@ public final class PetWindow {
         Label caption = new Label(text);
         caption.getStyleClass().add("button-caption");
         caption.setFont(Font.font(UI_FONT, 12));
+        caption.setOnMouseClicked(event -> {
+            button.fire();
+            event.consume();
+        });
         VBox box = new VBox(2, button, caption);
         box.getStyleClass().add("captioned-button");
         if (extraStyleClass != null) {
