@@ -1,0 +1,159 @@
+.root {
+    -fx-font-family: "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", "WenQuanYi Micro Hei", "SimHei", "PingFang SC", "Arial Unicode MS", "Ubuntu Sans", "DejaVu Sans", sans-serif;
+    -fx-font-size: 13px;
+}
+
+.pet-root {
+    -fx-background-color: transparent;
+}
+
+.character-pane {
+    -fx-min-width: 240px;
+    -fx-min-height: 300px;
+    -fx-background-color: transparent;
+    -fx-alignment: center;
+}
+
+.pet-sprite {
+    -fx-alignment: center;
+    -fx-cursor: hand;
+}
+
+.panel {
+    -fx-background-color: transparent;
+    -fx-background-size: 100% 100%;
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+    -fx-border-color: transparent;
+}
+
+.chat-panel {
+    -fx-background-image: url("../assets/UI/chat-panel.png");
+    -fx-min-width: 430px;
+    -fx-pref-width: 430px;
+    -fx-min-height: 332px;
+    -fx-pref-height: 332px;
+    -fx-padding: 34 42 34 42;
+}
+
+.schedule-panel {
+    -fx-background-image: url("../assets/UI/日程.png");
+    -fx-min-width: 314px;
+    -fx-pref-width: 314px;
+    -fx-min-height: 236px;
+    -fx-pref-height: 236px;
+    -fx-padding: 30 34 28 34;
+}
+
+.news-panel {
+    -fx-background-image: url("../assets/UI/新闻.png");
+    -fx-min-width: 395px;
+    -fx-pref-width: 395px;
+    -fx-min-height: 198px;
+    -fx-pref-height: 198px;
+    -fx-padding: 26 36 22 36;
+}
+
+.profile-panel {
+    -fx-background-image: url("../assets/UI/用户画像.png");
+    -fx-min-width: 331px;
+    -fx-pref-width: 331px;
+    -fx-min-height: 220px;
+    -fx-pref-height: 220px;
+    -fx-padding: 28 34 22 34;
+}
+
+.panel-title {
+    -fx-text-fill: #30232a;
+    -fx-font-weight: bold;
+}
+
+.captioned-button {
+    -fx-background-color: transparent;
+    -fx-alignment: center;
+}
+
+.button-caption {
+    -fx-background-color: transparent;
+    -fx-text-fill: #30232a;
+    -fx-font-weight: bold;
+}
+
+.art-button {
+    -fx-min-width: 48px;
+    -fx-pref-width: 48px;
+    -fx-max-width: 48px;
+    -fx-min-height: 48px;
+    -fx-pref-height: 48px;
+    -fx-max-height: 48px;
+    -fx-background-color: transparent;
+    -fx-background-image: url("../assets/UI/button-normal.png");
+    -fx-background-size: 100% 100%;
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.art-button:hover {
+    -fx-background-image: url("../assets/UI/button-hover.png");
+}
+
+.art-button:pressed {
+    -fx-background-image: url("../assets/UI/button-pressed.png");
+    -fx-translate-y: 1px;
+}
+
+.tool-button {
+    -fx-min-width: 54px;
+    -fx-pref-width: 54px;
+    -fx-max-width: 54px;
+    -fx-min-height: 54px;
+    -fx-pref-height: 54px;
+    -fx-max-height: 54px;
+}
+
+.chat-log {
+    -fx-pref-height: 220px;
+    -fx-wrap-text: true;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.chat-log .content {
+    -fx-background-color: rgba(255, 255, 255, 0.20);
+}
+
+.chat-input,
+.ui-input {
+    -fx-background-color: transparent;
+    -fx-background-image: url("../assets/UI/input-bg.png");
+    -fx-background-size: 100% 100%;
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+    -fx-border-color: transparent;
+    -fx-padding: 6 12 6 12;
+}
+
+.chat-input .content,
+.ui-input .content {
+    -fx-background-color: transparent;
+}
+
+.transparent-text {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 4;
+}
+
+.transparent-text .content {
+    -fx-background-color: transparent;
+}
+
+.chat-input:focused,
+.ui-input:focused,
+.transparent-text:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}

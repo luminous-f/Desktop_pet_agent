@@ -1,0 +1,29 @@
+# Build output
+target/
+build/
+out/
+
+# IDE/editor
+.idea/
+.vscode/
+*.iml
+
+# Local environment and machine-specific config
+.env
+.env.*
+!.env.example
+config/application.properties
+config/application-local.properties
+
+# Runtime output
+logs/
+exports/
+organized/
+
+# OS/temp files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+~$*

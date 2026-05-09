@@ -1,0 +1,58 @@
+CREATE TABLE IF NOT EXISTS conversations (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    session_id VARCHAR(64) NOT NULL,
+    role VARCHAR(24) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_conversations_session_created (session_id, created_at)
+);
+
+CREATE TABLE IF NOT EXISTS long_term_memories (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    memory_type VARCHAR(64) NOT NULL,
+    content TEXT NOT NULL,
+    source_conversation_id BIGINT NULL,
+    priority INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_memories_type_priority (memory_type, priority)
+);
+
+CREATE TABLE IF NOT EXISTS user_profile (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    display_name VARCHAR(128) NULL,
+    profile_text TEXT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS schedule_items (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    item_date DATE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    details TEXT NULL,
+    done BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_schedule_date_done (item_date, done)
+);
+
+CREATE TABLE IF NOT EXISTS resource_packs (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(128) NOT NULL,
+    root_path VARCHAR(1024) NOT NULL,
+    persona_path VARCHAR(1024) NULL,
+    world_path VARCHAR(1024) NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS file_organization_jobs (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    source_root VARCHAR(1024) NOT NULL,
+    target_root VARCHAR(1024) NOT NULL,
+    file_glob VARCHAR(128) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    report_path VARCHAR(1024) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL
+);
