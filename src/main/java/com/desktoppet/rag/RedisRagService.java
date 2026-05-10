@@ -31,12 +31,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 @Service
 public class RedisRagService implements RagService {
@@ -44,6 +46,10 @@ public class RedisRagService implements RagService {
 
     private static final String BASE_CHUNK_KEY_PREFIX = "desktop-pet:rag:chunk:";
     private static final String BASE_PARENT_KEY_PREFIX = "desktop-pet:rag:parent:";
+    private static final Pattern CASTORICE_SPEECH_PATTERN = Pattern.compile(
+            "(^|\\R)\\s*(?:「?遐蝶」?|灰黯之手，遐蝶|「?灰黯之手，遐蝶」?|记忆中的遐蝶)\\s*[：:]"
+    );
+    private static final List<String> CASTORICE_MENTION_ALIASES = List.of("遐蝶", "小蝶", "Castorice");
     private static final List<String> DEFAULT_DOCUMENTS = List.of(
             "/assets/rag/Castorice/README.md",
             "/assets/rag/Castorice/world.md",
@@ -95,39 +101,103 @@ public class RedisRagService implements RagService {
 
     @Override
     public List<String> retrieve(String query) {
+        return debugRetrieve(query).stream()
+                .map(hit -> hit.source() + " / " + hit.parentId() + ":\n" + hit.text())
+                .toList();
+    }
+
+    @Override
+    public List<RagDebugHit> debugRetrieve(String query) {
         if (embeddingModel == null || query == null || query.isBlank()) {
             return List.of();
         }
         try {
             byte[] queryVector = vectorBytes(embeddingModel.embed(query).content().vector());
-            Query redisQuery = new Query("*=>[KNN " + config.ragTopK() + " @embedding $vec AS vector_score]")
+            int resultLimit = Math.max(1, config.ragTopK());
+            int candidateLimit = Math.max(resultLimit, Math.min(50, resultLimit * 5));
+            Query redisQuery = new Query("*=>[KNN " + candidateLimit + " @embedding $vec AS vector_score]")
                     .addParam("vec", queryVector)
                     .returnFields("source", "parent_id", "text", "vector_score")
-                    .limit(0, config.ragTopK())
+                    .limit(0, candidateLimit)
                     .dialect(2);
             SearchResult result = jedis.ftSearch(searchIndex, redisQuery);
             List<Document> relevantDocuments = result.getDocuments().stream()
                     .filter(document -> isRelevant(document.getString("vector_score")))
+                    .sorted(Comparator.comparingDouble(this::weightedDistance))
+                    .limit(resultLimit)
                     .toList();
+            List<RagDebugHit> hits = new ArrayList<>();
             for (int i = 0; i < relevantDocuments.size(); i++) {
                 Document document = relevantDocuments.get(i);
+                String text = document.getString("text");
+                double boost = retrievalBoost(text);
+                double weightedScore = weightedDistance(document);
                 log.info(
-                        "RAG hit #{}: source={}, parent={}, score={}, text={}",
+                        "RAG hit #{}: source={}, parent={}, score={}, dialogueBoost={}, text={}",
                         i + 1,
                         document.getString("source"),
                         document.getString("parent_id"),
                         document.getString("vector_score"),
-                        summarize(document.getString("text"), 160)
+                        boost,
+                        summarize(text, 160)
                 );
+                hits.add(new RagDebugHit(
+                        i + 1,
+                        document.getString("source"),
+                        document.getString("parent_id"),
+                        document.getString("vector_score"),
+                        boost,
+                        weightedScore,
+                        retrievalBoostReason(text),
+                        text == null ? 0 : text.length(),
+                        text
+                ));
             }
-            List<String> references = relevantDocuments.stream()
-                    .map(document -> document.getString("source") + " / " + document.getString("parent_id")
-                            + ":\n" + document.getString("text"))
-                    .toList();
-            log.info("RAG retrieve completed: queryLength={}, hits={}", query.length(), references.size());
-            return references;
+            log.info("RAG retrieve completed: queryLength={}, hits={}", query.length(), hits.size());
+            return List.copyOf(hits);
         } catch (Exception e) {
             log.warn("RAG retrieve failed: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    public List<RagDebugHit> debugRetrieveRawCandidates(String query) {
+        if (embeddingModel == null || query == null || query.isBlank()) {
+            return List.of();
+        }
+        try {
+            byte[] queryVector = vectorBytes(embeddingModel.embed(query).content().vector());
+            int resultLimit = Math.max(1, config.ragTopK());
+            int candidateLimit = Math.max(resultLimit, Math.min(50, resultLimit * 5));
+            Query redisQuery = new Query("*=>[KNN " + candidateLimit + " @embedding $vec AS vector_score]")
+                    .addParam("vec", queryVector)
+                    .returnFields("source", "parent_id", "text", "vector_score")
+                    .limit(0, candidateLimit)
+                    .dialect(2);
+            SearchResult result = jedis.ftSearch(searchIndex, redisQuery);
+            List<Document> documents = result.getDocuments().stream()
+                    .filter(document -> isRelevant(document.getString("vector_score")))
+                    .toList();
+            List<RagDebugHit> hits = new ArrayList<>();
+            for (int i = 0; i < documents.size(); i++) {
+                Document document = documents.get(i);
+                String text = document.getString("text");
+                double boost = retrievalBoost(text);
+                hits.add(new RagDebugHit(
+                        i + 1,
+                        document.getString("source"),
+                        document.getString("parent_id"),
+                        document.getString("vector_score"),
+                        boost,
+                        weightedDistance(document),
+                        retrievalBoostReason(text),
+                        text == null ? 0 : text.length(),
+                        text
+                ));
+            }
+            return List.copyOf(hits);
+        } catch (Exception e) {
+            log.warn("RAG raw candidate debug retrieve failed: {}", e.getMessage());
             return List.of();
         }
     }
@@ -341,6 +411,37 @@ public class RedisRagService implements RagService {
         }
     }
 
+    private double weightedDistance(Document document) {
+        double distance = parseDouble(document.getString("vector_score"), Double.MAX_VALUE);
+        return distance - retrievalBoost(document.getString("text"));
+    }
+
+    private double retrievalBoost(String text) {
+        if (text == null || text.isBlank()) {
+            return 0.0;
+        }
+        if (CASTORICE_SPEECH_PATTERN.matcher(text).find()) {
+            return 0.12;
+        }
+        if (CASTORICE_MENTION_ALIASES.stream().anyMatch(text::contains)) {
+            return 0.06;
+        }
+        return 0.0;
+    }
+
+    private String retrievalBoostReason(String text) {
+        if (text == null || text.isBlank()) {
+            return "none";
+        }
+        if (CASTORICE_SPEECH_PATTERN.matcher(text).find()) {
+            return "castorice_speech";
+        }
+        if (CASTORICE_MENTION_ALIASES.stream().anyMatch(text::contains)) {
+            return "castorice_mention";
+        }
+        return "none";
+    }
+
     private String summarize(String text, int maxChars) {
         if (text == null || text.isBlank()) {
             return "";
@@ -416,6 +517,17 @@ public class RedisRagService implements RagService {
         }
         try {
             return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private double parseDouble(String value, double fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Double.parseDouble(value);
         } catch (NumberFormatException e) {
             return fallback;
         }

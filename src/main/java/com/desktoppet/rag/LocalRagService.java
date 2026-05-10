@@ -7,8 +7,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 public final class LocalRagService implements RagService {
+    private static final Pattern CASTORICE_SPEECH_PATTERN = Pattern.compile(
+            "(^|\\R)\\s*(?:「?遐蝶」?|灰黯之手，遐蝶|「?灰黯之手，遐蝶」?|记忆中的遐蝶)\\s*[：:]"
+    );
+
     private static final List<String> DEFAULT_DOCUMENTS = List.of(
             "/assets/rag/Castorice/README.md",
             "/assets/rag/Castorice/world.md"
@@ -75,13 +80,19 @@ public final class LocalRagService implements RagService {
 
     private int score(String text, String query) {
         int score = 0;
+        if (CASTORICE_SPEECH_PATTERN.matcher(text).find()) {
+            score += 6;
+        } else if (text.contains("遐蝶") || text.contains("小蝶") || text.contains("castorice")) {
+            score += 3;
+        }
         for (String token : query.split("\\s+")) {
             if (!token.isBlank() && text.contains(token)) {
                 score++;
             }
         }
-        for (String keyword : List.of("遐蝶", "翁法洛斯", "死亡", "阁下", "开拓者", "黄金裔")) {
-            if (query.contains(keyword) && text.contains(keyword)) {
+        for (String keyword : List.of("遐蝶", "小蝶", "Castorice", "翁法洛斯", "死亡", "阁下", "开拓者", "黄金裔")) {
+            String normalizedKeyword = keyword.toLowerCase(Locale.ROOT);
+            if (query.contains(normalizedKeyword) && text.contains(normalizedKeyword)) {
                 score += 3;
             }
         }

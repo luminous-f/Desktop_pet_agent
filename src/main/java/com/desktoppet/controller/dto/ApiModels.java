@@ -42,6 +42,25 @@ public final class ApiModels {
     public record ProfileResponse(String profileText) {
     }
 
+    public record RagDebugRequest(String query) {
+    }
+
+    public record RagDebugHitResponse(
+            int rank,
+            String source,
+            String parentId,
+            String vectorScore,
+            double dialogueBoost,
+            double weightedScore,
+            String boostReason,
+            int textLength,
+            String text
+    ) {
+    }
+
+    public record RagDebugResponse(String query, List<RagDebugHitResponse> hits) {
+    }
+
     public record RagReindexResponse(int indexedDocuments, int skippedDocuments, List<String> messages) {
     }
 

@@ -20,6 +20,9 @@ logs/
 exports/
 organized/
 
+# Large packaged RAG source material; keep it local unless intentionally refreshed.
+src/main/resources/assets/rag/Castorice/story.docx
+
 # OS/temp files
 .DS_Store
 Thumbs.db

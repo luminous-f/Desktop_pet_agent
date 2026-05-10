@@ -33,6 +33,8 @@ import java.util.UUID;
 @Service
 public final class LangChainDesktopPetAgent implements DesktopPetAgent {
     private static final Logger log = LoggerFactory.getLogger(LangChainDesktopPetAgent.class);
+    private static final List<String> CHARACTER_RETRIEVAL_ALIASES = List.of("遐蝶", "小蝶", "Castorice");
+    private static final List<String> CHARACTER_REFERENCE_MARKERS = List.of("遐蝶", "小蝶", "Castorice", "castorice", "桌宠");
 
     private final String sessionId = UUID.randomUUID().toString();
     private final ConversationMemoryService memoryService;
@@ -279,7 +281,7 @@ public final class LangChainDesktopPetAgent implements DesktopPetAgent {
 
     private String rewriteLoreRetrievalQuery(String userMessage) {
         if (loreRetrievalQueryRewriteAiService == null || userMessage == null || userMessage.isBlank()) {
-            return userMessage;
+            return enrichCharacterAliasesForRetrieval(userMessage, userMessage);
         }
         try {
             String rewritten = loreRetrievalQueryRewriteAiService.rewrite(
@@ -289,14 +291,46 @@ public final class LangChainDesktopPetAgent implements DesktopPetAgent {
             );
             String normalized = rewritten == null ? "" : rewritten.trim();
             if (normalized.isBlank()) {
-                return userMessage;
+                return enrichCharacterAliasesForRetrieval(userMessage, userMessage);
             }
+            normalized = enrichCharacterAliasesForRetrieval(userMessage, normalized);
             log.info("Lore retrieval query rewritten: original={}, rewritten={}", userMessage, normalized);
             return normalized;
         } catch (Exception e) {
             log.warn("Lore retrieval query rewrite failed: {}", e.getMessage());
-            return userMessage;
+            return enrichCharacterAliasesForRetrieval(userMessage, userMessage);
         }
+    }
+
+    private String enrichCharacterAliasesForRetrieval(String userMessage, String retrievalQuery) {
+        String query = retrievalQuery == null ? "" : retrievalQuery.trim();
+        if (query.isBlank()) {
+            query = userMessage == null ? "" : userMessage.trim();
+        }
+        String combined = ((userMessage == null ? "" : userMessage) + "\n" + query).toLowerCase(Locale.ROOT);
+        boolean referencesCharacter = CHARACTER_REFERENCE_MARKERS.stream()
+                .map(marker -> marker.toLowerCase(Locale.ROOT))
+                .anyMatch(combined::contains);
+        if (!referencesCharacter) {
+            return query;
+        }
+        StringBuilder enriched = new StringBuilder(query);
+        for (String alias : CHARACTER_RETRIEVAL_ALIASES) {
+            if (!containsIgnoreCase(query, alias)) {
+                if (!enriched.isEmpty()) {
+                    enriched.append(' ');
+                }
+                enriched.append(alias);
+            }
+        }
+        return enriched.toString();
+    }
+
+    private boolean containsIgnoreCase(String text, String value) {
+        if (text == null || value == null) {
+            return false;
+        }
+        return text.toLowerCase(Locale.ROOT).contains(value.toLowerCase(Locale.ROOT));
     }
 
     private void maybeUpdateProfile(String userMessage) {
